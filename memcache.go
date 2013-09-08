@@ -214,29 +214,3 @@ func (c *Client) Delete(key []byte)([]byte,error){
   return c.deletionCommand(key)
 }
 
-/*
-func main(){
-  var c Client
-  err := c.Connect("localhost:11211")
-  if err != nil{
-    panic(err)
-  }
-
-  b,err := c.Stats()
-  if err != nil {
-    panic(err)
-  }
-
-  fmt.Print(string(b))
-
-  b, err = c.Add([]byte("hello"),[]byte("world"))
-  fmt.Print(string(b))
-  b,err = c.Get([]byte("hello"))
-  fmt.Println(string(b))
-
-  b,err = c.Get([]byte("good"))
-  if b == nil {
-    fmt.Println("can`t find good")
-  }
-}
-*/
