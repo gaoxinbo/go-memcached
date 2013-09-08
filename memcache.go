@@ -1,4 +1,4 @@
-package main
+package go_memcached
 
 import (
     "net"
@@ -61,6 +61,11 @@ func (c *Client) Connect(host string) error {
   return nil
 }
 
+func (c *Client) Close(){
+  c.conn.Close()
+  c.conn = nil
+}
+
 func (c *Client) Stats() ([]byte,error){
   if c.conn == nil {
     return nil,errors.New("not connected!")
@@ -71,18 +76,66 @@ func (c *Client) Stats() ([]byte,error){
 
 }
 
-func (c *Client) Add(key,value []byte) ([]byte,error){
+func (c *Client) deletionCommand(key []byte)([]byte,error){
   err := c.check()
   if err != nil {
     return nil,err
   }
 
-  s := fmt.Sprintf("add %s 0 0 %d \r\n",string(key),len(value))
-  c.conn.Write([]byte(s))
-  s = fmt.Sprintf("%s\r\n", string(value))
-  c.conn.Write([]byte(s))
+  c.send(getDeletionCommond(key))
   return c.readLine()
+}
 
+func (c *Client) send(cmd string) error{
+  c.conn.Write([]byte(cmd))
+  // TODO handle error
+  return nil
+}
+
+func (c *Client) storageCommand(key,value []byte, flag, expire int, op string) ([]byte,error){
+  err := c.check()
+  if err != nil {
+    return nil,err
+  }
+
+  err = c.send(getStorageCommond(key,value,flag,expire,op))
+  if err != nil {
+    return nil,err
+  }
+
+  return c.readLine()
+}
+
+func (c *Client) Replace(key,value []byte) ([]byte,error){
+  return c.ReplaceWithExpire(key,value,0,0)
+}
+
+func (c *Client) ReplaceWithExpire(key,value []byte,flag, expire int) ([]byte,error){
+  return c.storageCommand(key,value,flag,expire,"replace")
+}
+
+func (c *Client) Add(key,value []byte) ([]byte,error){
+  return c.AddWithExpire(key,value,0,0)
+}
+
+func (c *Client) AddWithExpire(key,value []byte, flag,expire int)([]byte, error){
+  return c.storageCommand(key,value,flag,expire,"add")
+}
+
+func (c *Client) Append(key,value []byte) ([]byte,error){
+  return c.AppendWithExpire(key,value,0,0)
+}
+
+func (c *Client) AppendWithExpire(key,value []byte, flag,expire int)([]byte, error){
+  return c.storageCommand(key,value,flag,expire,"append")
+}
+
+func (c *Client) Prepend(key,value []byte) ([]byte,error){
+  return c.PrependWithExpire(key,value,0,0)
+}
+
+func (c *Client) PrependWithExpire(key,value []byte, flag,expire int)([]byte, error){
+  return c.storageCommand(key,value,flag,expire,"prepend")
 }
 
 func (c *Client) Get(key []byte)([]byte,error) {
@@ -105,9 +158,13 @@ func (c *Client) Get(key []byte)([]byte,error) {
   }
 
   return items[1],nil
-
 }
 
+func (c *Client) Delete(key []byte)([]byte,error){
+  return c.deletionCommand(key)
+}
+
+/*
 func main(){
   var c Client
   err := c.Connect("localhost:11211")
@@ -132,3 +189,4 @@ func main(){
     fmt.Println("can`t find good")
   }
 }
+*/
