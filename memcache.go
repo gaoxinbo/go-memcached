@@ -3,14 +3,19 @@ package go_memcached
 import (
     "net"
     "errors"
-    "fmt"
     "bufio"
     "bytes"
+    "strconv"
     )
 
 type Client struct {
   conn net.Conn
   reader *bufio.Reader
+}
+
+type Value struct{
+  Value []byte
+  Flag int
 }
 
 func (c *Client) check() error {
@@ -92,6 +97,15 @@ func (c *Client) send(cmd string) error{
   return nil
 }
 
+func (c *Client) getCommand(keys [][]byte)([]byte,error){
+  err := c.check()
+  if err != nil {
+    return nil,err
+  }
+  c.send(getGetCommand(keys))
+  return c.readMulLines()
+}
+
 func (c *Client) storageCommand(key,value []byte, flag, expire int, op string) ([]byte,error){
   err := c.check()
   if err != nil {
@@ -138,26 +152,62 @@ func (c *Client) PrependWithExpire(key,value []byte, flag,expire int)([]byte, er
   return c.storageCommand(key,value,flag,expire,"prepend")
 }
 
-func (c *Client) Get(key []byte)([]byte,error) {
-  err := c.check()
+// retrive one key
+func (c *Client) Get(key []byte)(*Value,error) {
+  var k = make([][]byte,1)
+  k = append(k,key)
+
+  m,err := c.Gets(k)
   if err != nil {
     return nil,err
   }
-
-  s := fmt.Sprintf("get %s\r\n", string(key))
-  c.conn.Write([]byte(s))
-
-  b,err := c.readMulLines()
-  if err != nil{
-    return nil,err
-  }
-
-  items := bytes.Split(b,[]byte("\r\n"))
-  if len(items) == 2 {
+  v,b:= m[string(key)]
+  if b == false {
     return nil,nil
   }
 
-  return items[1],nil
+  return &v,nil
+}
+
+// get multiple keys
+func (c *Client) Gets(key [][]byte) (map[string]Value,error){
+  b,err := c.getCommand(key)
+  if err != nil{
+    return nil,err
+  }
+  m := parseGet(b)
+  return m,nil
+}
+
+func parseGet(b []byte) (map[string] Value){
+  m := make(map[string]Value)
+  var key string
+  var flag int
+  var length int
+  results := bytes.Split(b,[]byte("\r\n"))
+
+  // last one is "END\r\n"
+  for i:=0;i<len(results)-1;i++ {
+    if i % 2 == 0 {
+      items := bytes.Split(results[i],[]byte(" "))
+      // invalid 
+      if len(items) < 4 || bytes.Compare(items[0], []byte("VALUE"))!=0 {
+        key = ""
+      }else{
+        key = string(items[1])
+        flag,_ = strconv.Atoi(string(items[2]))
+        length,_ = strconv.Atoi(string(items[3]))
+      }
+    } else {
+      if len(key) == 0 {
+        continue
+      } else{
+        t := results[i][0:length]
+        m[key] = Value{Value:t, Flag:flag}
+      }
+    }
+  }
+  return m
 }
 
 func (c *Client) Delete(key []byte)([]byte,error){

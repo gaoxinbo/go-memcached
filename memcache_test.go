@@ -34,4 +34,16 @@ func TestAdd(t *testing.T){
   if bytes.Compare(b,[]byte("STORED\r\n")) !=0 {
     t.Errorf("add error result is %s", string(b))
   }
+
+  /*
+  v,err := c.Get([]byte("key"))
+  fmt.Println(string(v.Value))
+
+
+  m,err := c.Gets(bytes.Split([]byte("hello key good day"),[]byte(" ")))
+  for key,value := range m {
+    fmt.Println("key " + key)
+    fmt.Println("value " + string(value.Value))
+  }
+  */
 }
