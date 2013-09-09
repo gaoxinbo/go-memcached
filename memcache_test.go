@@ -7,7 +7,7 @@ import (
     )
 
 // change this config item if necessary
-var host = "localhost:11211"
+var host = "192.168.1.4:11211"
 
 func TestConnect(t *testing.T){
   var c Client
@@ -47,3 +47,21 @@ func TestAdd(t *testing.T){
   }
   */
 }
+
+/*
+func BenchmarkConnect(b *testing.B){
+  for i:=0;i<b.N;i++ {
+    var c Client
+    c.Connect(host)
+    c.Close()
+  }
+}
+
+func BenchmarkAdd(b *testing.B){
+  var c Client
+  c.Connect(host)
+  for i:= 0; i<b.N; i++{
+    c.Add([]byte("hello"),[]byte("world"))
+  }
+}
+*/
