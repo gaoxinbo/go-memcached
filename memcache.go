@@ -110,7 +110,6 @@ func (c *Client) Replace(key,value []byte) ([]byte,error){
 
 func (c *Client) ReplaceWithExpire(key,value []byte,flag, expire int) ([]byte,error){
   return c.singleLineCommand(getStorageCommond(key,value,flag,expire,"replace"))
-  //return c.storageCommand(key,value,flag,expire,"replace")
 }
 
 func (c *Client) Add(key,value []byte) ([]byte,error){
@@ -118,7 +117,6 @@ func (c *Client) Add(key,value []byte) ([]byte,error){
 }
 
 func (c *Client) AddWithExpire(key,value []byte, flag,expire int)([]byte, error){
-  //return c.storageCommand(key,value,flag,expire,"add")
   return c.singleLineCommand(getStorageCommond(key,value,flag,expire,"add"))
 }
 
@@ -128,7 +126,6 @@ func (c *Client) Append(key,value []byte) ([]byte,error){
 
 func (c *Client) AppendWithExpire(key,value []byte, flag,expire int)([]byte, error){
   return c.singleLineCommand(getStorageCommond(key,value,flag,expire,"append"))
-  //return c.storageCommand(key,value,flag,expire,"append")
 }
 
 func (c *Client) Prepend(key,value []byte) ([]byte,error){
@@ -137,7 +134,6 @@ func (c *Client) Prepend(key,value []byte) ([]byte,error){
 
 func (c *Client) PrependWithExpire(key,value []byte, flag,expire int)([]byte, error){
   return c.singleLineCommand(getStorageCommond(key,value,flag,expire,"prepend"))
-  //return c.storageCommand(key,value,flag,expire,"prepend")
 }
 
 // retrive one key

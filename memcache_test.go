@@ -4,6 +4,8 @@ package go_memcached
 import (
     "testing"
     "bytes"
+    "strings"
+    //"fmt"
     )
 
 // change this config item if necessary
@@ -25,27 +27,45 @@ func TestAdd(t *testing.T){
     t.Errorf("client didn`t connent")
   }
 
-  c.Delete([]byte("key"))
-  b,err:=c.Add([]byte("key"),[]byte("value"))
+  keys := []string{"one","two","three"}
+  values:= []string{"v1","v2","v3"}
+
+  // add and get keys one by one
+  for i:=0 ; i<len(keys);i++ {
+    c.Delete([]byte(keys[i]))
+    b,err := c.Add([]byte(keys[i]),[]byte(values[i]))
+    if err != nil {
+      t.Errorf("add error %s",err)
+    }
+    if bytes.Compare(b,[]byte("STORED\r\n")) !=0 {
+      t.Errorf("add error result is %s", string(b))
+    }
+    v,err := c.Get([]byte(keys[i]))
+    if bytes.Compare(v.Value,[]byte(values[i])) != 0{
+      t.Errorf("get key %s error, expect %s get %s",keys[i],values[i], string(v.Value))
+    }
+
+  }
+
+  s := strings.Join(keys," ")
+
+  // get multiple keys
+  m,err:= c.Gets(bytes.Split([]byte(s),[]byte(" ")))
   if err != nil{
-    t.Errorf("add error %s",err)
+    t.Errorf("gets error")
   }
 
-  if bytes.Compare(b,[]byte("STORED\r\n")) !=0 {
-    t.Errorf("add error result is %s", string(b))
+  for i:=0 ; i<len(keys); i++{
+    v,e := m[keys[i]]
+    if e == false{
+      t.Errorf("key %s do not exist",keys[i])
+    }
+
+    if bytes.Compare(v.Value, []byte(values[i])) != 0{
+      t.Errorf("get %s value error, expect %s, get %s", keys[i], values[i], string(v.Value))
+    }
   }
 
-  /*
-  v,err := c.Get([]byte("key"))
-  fmt.Println(string(v.Value))
-
-
-  m,err := c.Gets(bytes.Split([]byte("hello key good day"),[]byte(" ")))
-  for key,value := range m {
-    fmt.Println("key " + key)
-    fmt.Println("value " + string(value.Value))
-  }
-  */
 }
 func init(){
   err := c.Connect(host)
