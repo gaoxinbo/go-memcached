@@ -8,21 +8,21 @@ import (
 
 // change this config item if necessary
 var host = "localhost:11211"
+var c Client
+var initial = false
 
 func TestConnect(t *testing.T){
-  var c Client
-  err := c.Connect(host)
+  var n Client
+  err := n.Connect(host)
   if err != nil {
     t.Errorf("can`t connect to %s",host)
   }
-  c.Close()
+  n.Close()
 }
 
 func TestAdd(t *testing.T){
-  var c Client
-  err := c.Connect(host)
-  if err != nil {
-    t.Errorf("can`t connect to %s",host)
+  if initial == false{
+    t.Errorf("client didn`t connent")
   }
 
   c.Delete([]byte("key"))
@@ -47,21 +47,9 @@ func TestAdd(t *testing.T){
   }
   */
 }
-
-/*
-func BenchmarkConnect(b *testing.B){
-  for i:=0;i<b.N;i++ {
-    var c Client
-    c.Connect(host)
-    c.Close()
+func init(){
+  err := c.Connect(host)
+  if err == nil {
+    initial = true
   }
 }
-
-func BenchmarkAdd(b *testing.B){
-  var c Client
-  c.Connect(host)
-  for i:= 0; i<b.N; i++{
-    c.Add([]byte("hello"),[]byte("world"))
-  }
-}
-*/
