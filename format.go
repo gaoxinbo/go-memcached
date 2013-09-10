@@ -17,3 +17,11 @@ func getGetCommand(key [][]byte) string {
   b := bytes.Join(key,[]byte(" "))
   return fmt.Sprintf("get %s\r\n", string(b))
 }
+
+func getIncrOrDecrCommand(key,value []byte,op string) string{
+  return fmt.Sprintf("%s %s %s\r\n" ,op, string(key), string(value))
+}
+
+func getTouchCommand(key[]byte,expire int)string{
+  return fmt.Sprintf("touch %s %d\r\n", string(key),expire);
+}

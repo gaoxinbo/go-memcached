@@ -7,7 +7,7 @@ import (
     )
 
 // change this config item if necessary
-var host = "192.168.1.4:11211"
+var host = "localhost:11211"
 
 func TestConnect(t *testing.T){
   var c Client

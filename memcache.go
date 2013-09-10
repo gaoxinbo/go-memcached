@@ -80,44 +80,28 @@ func (c *Client) Stats() ([]byte,error){
   return c.readMulLines()
 
 }
-
-func (c *Client) deletionCommand(key []byte)([]byte,error){
-  err := c.check()
-  if err != nil {
-    return nil,err
-  }
-
-  c.send(getDeletionCommond(key))
-  return c.readLine()
-}
-
 func (c *Client) send(cmd string) error{
   c.conn.Write([]byte(cmd))
   // TODO handle error
   return nil
 }
 
-func (c *Client) getCommand(keys [][]byte)([]byte,error){
+func (c *Client) singleLineCommand(cmd string)([]byte,error){
   err := c.check()
   if err != nil {
     return nil,err
   }
-  c.send(getGetCommand(keys))
-  return c.readMulLines()
+  c.send(cmd)
+  return c.readLine()
 }
 
-func (c *Client) storageCommand(key,value []byte, flag, expire int, op string) ([]byte,error){
+func (c *Client) multipleLinesCommand(cmd string)([]byte, error){
   err := c.check()
   if err != nil {
     return nil,err
   }
-
-  err = c.send(getStorageCommond(key,value,flag,expire,op))
-  if err != nil {
-    return nil,err
-  }
-
-  return c.readLine()
+  c.send(cmd)
+  return c.readMulLines()
 }
 
 func (c *Client) Replace(key,value []byte) ([]byte,error){
@@ -125,7 +109,8 @@ func (c *Client) Replace(key,value []byte) ([]byte,error){
 }
 
 func (c *Client) ReplaceWithExpire(key,value []byte,flag, expire int) ([]byte,error){
-  return c.storageCommand(key,value,flag,expire,"replace")
+  return c.singleLineCommand(getStorageCommond(key,value,flag,expire,"replace"))
+  //return c.storageCommand(key,value,flag,expire,"replace")
 }
 
 func (c *Client) Add(key,value []byte) ([]byte,error){
@@ -133,7 +118,8 @@ func (c *Client) Add(key,value []byte) ([]byte,error){
 }
 
 func (c *Client) AddWithExpire(key,value []byte, flag,expire int)([]byte, error){
-  return c.storageCommand(key,value,flag,expire,"add")
+  //return c.storageCommand(key,value,flag,expire,"add")
+  return c.singleLineCommand(getStorageCommond(key,value,flag,expire,"add"))
 }
 
 func (c *Client) Append(key,value []byte) ([]byte,error){
@@ -141,7 +127,8 @@ func (c *Client) Append(key,value []byte) ([]byte,error){
 }
 
 func (c *Client) AppendWithExpire(key,value []byte, flag,expire int)([]byte, error){
-  return c.storageCommand(key,value,flag,expire,"append")
+  return c.singleLineCommand(getStorageCommond(key,value,flag,expire,"append"))
+  //return c.storageCommand(key,value,flag,expire,"append")
 }
 
 func (c *Client) Prepend(key,value []byte) ([]byte,error){
@@ -149,7 +136,8 @@ func (c *Client) Prepend(key,value []byte) ([]byte,error){
 }
 
 func (c *Client) PrependWithExpire(key,value []byte, flag,expire int)([]byte, error){
-  return c.storageCommand(key,value,flag,expire,"prepend")
+  return c.singleLineCommand(getStorageCommond(key,value,flag,expire,"prepend"))
+  //return c.storageCommand(key,value,flag,expire,"prepend")
 }
 
 // retrive one key
@@ -171,7 +159,8 @@ func (c *Client) Get(key []byte)(*Value,error) {
 
 // get multiple keys
 func (c *Client) Gets(key [][]byte) (map[string]Value,error){
-  b,err := c.getCommand(key)
+  b,err := c.multipleLinesCommand(getGetCommand(key))
+  //b,err := c.getCommand(key)
   if err != nil{
     return nil,err
   }
@@ -211,6 +200,18 @@ func parseGet(b []byte) (map[string] Value){
 }
 
 func (c *Client) Delete(key []byte)([]byte,error){
-  return c.deletionCommand(key)
+  return c.singleLineCommand(getDeletionCommond(key))
+}
+
+func (c *Client) Incr(key,value []byte) ([]byte,error){
+  return c.singleLineCommand(getIncrOrDecrCommand(key,value,"incr"))
+}
+
+func (c *Client) Decr(key, value[]byte) ([]byte, error){
+  return c.singleLineCommand(getIncrOrDecrCommand(key,value,"decr"))
+}
+
+func (c *Client) Touch(key []byte, expire int)([]byte,error){
+  return c.singleLineCommand(getTouchCommand(key,expire))
 }
 
