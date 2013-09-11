@@ -66,7 +66,48 @@ func TestAdd(t *testing.T){
     }
   }
 
+  // add an existed key
+  b,err := c.Add([]byte("one"),[]byte("hello"))
+  if bytes.Compare(b,[]byte("NOT_STORED\r\n")) != 0 {
+    t.Errorf("store an existed key error")
+  }
+
 }
+
+func TestSet(t *testing.T){
+  if initial == false{
+    t.Errorf("client didn`t connent")
+  }
+
+  b,err := c.Set([]byte("set"),[]byte("good"))
+  if err != nil {
+    t.Errorf("set error")
+  }
+
+  if bytes.Compare(b,[]byte("STORED\r\n")) != 0{
+    t.Errorf("set result error %s", string(b))
+  }
+
+  v,err := c.Get([]byte("set"))
+    if bytes.Compare(v.Value,[]byte("good")) != 0{
+      t.Errorf("get key %s error, expect %s get %s","set","good", string(v.Value))
+    }
+
+  // set to another value
+  b,err = c.Set([]byte("set"),[]byte("good bye"))
+
+  if bytes.Compare(b,[]byte("STORED\r\n")) != 0{
+    t.Errorf("set result error %s", string(b))
+  }
+
+  v,err = c.Get([]byte("set"))
+    if bytes.Compare(v.Value,[]byte("good bye")) != 0{
+      t.Errorf("get key %s error, expect %s get %s","set","good bye", string(v.Value))
+    }
+
+
+}
+
 func init(){
   err := c.Connect(host)
   if err == nil {

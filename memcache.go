@@ -120,6 +120,14 @@ func (c *Client) AddWithExpire(key,value []byte, flag,expire int)([]byte, error)
   return c.singleLineCommand(getStorageCommond(key,value,flag,expire,"add"))
 }
 
+func (c *Client) Set(key,value []byte) ([]byte,error){
+  return c.SetWithExpire(key,value,0,0)
+}
+
+func (c *Client) SetWithExpire(key,value []byte, flag,expire int)([]byte, error){
+  return c.singleLineCommand(getStorageCommond(key,value,flag,expire,"set"))
+}
+
 func (c *Client) Append(key,value []byte) ([]byte,error){
   return c.AppendWithExpire(key,value,0,0)
 }
