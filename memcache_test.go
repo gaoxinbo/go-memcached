@@ -108,6 +108,30 @@ func TestSet(t *testing.T){
 
 }
 
+func TestReplace(t *testing.T){
+  if initial == false{
+    t.Errorf("client didn`t connent")
+  }
+
+  c.Delete([]byte("replace"))
+  b,_:= c.Replace([]byte("replace"),[]byte("value"))
+  if bytes.Compare(b, []byte("NOT_STORED\r\n")) != 0{
+    t.Errorf("replace a not existed key error")
+  }
+
+  c.Add([]byte("replace"),[]byte(""))
+  b,_= c.Replace([]byte("replace"),[]byte("value"))
+  if bytes.Compare(b, []byte("STORED\r\n")) != 0{
+    t.Errorf("replace a value error")
+  }
+
+  v,_ := c.Get([]byte("replace"))
+  if bytes.Compare([]byte("value"),v.Value) != 0{
+    t.Errorf("replaced value wrong")
+  }
+
+}
+
 func init(){
   err := c.Connect(host)
   if err == nil {
